@@ -8,7 +8,6 @@ import SummaryStats from './components/SummaryStats';
 import FraudRingTable from './components/FraudRingTable';
 import SuspiciousTable from './components/SuspiciousTable';
 import GraphVisualization from './components/GraphVisualization';
-// import DownloadButton from './components/DownloadButton';
 
 // Hook Imports
 import { useAnalysis } from './hooks/useAnalysis';
