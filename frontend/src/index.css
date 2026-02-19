@@ -1,56 +1,63 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap');
 @import "tailwindcss";
 
 @theme {
+  /* Tactical Forensics Theme */
+  --color-background-primary: #030712;
+  /* Deep void black */
+  --color-background-secondary: #0a101f;
+  /* Dark radar blue */
+  --color-background-card: rgba(10, 16, 31, 0.85);
 
-  /* Our mandatory dark theme colors */
-  --color-background-primary: #0f172a;
-  --color-background-secondary: #1e293b;
-  --color-background-card: #1e293b;
-  --color-border: #334155;
-  --color-text-primary: #f1f5f9;
-  --color-text-secondary: #94a3b8;
+  --color-border: #1e293b;
+  --color-border-glow: #00f0ff;
+  /* Neon Cyan */
 
-  /* Semantic Accent Colors */
-  --color-accent-clean: #3b82f6;
-  --color-accent-warning: #f59e0b;
-  --color-accent-danger: #ef4444;
-  --color-accent-success: #22c55e;
-  --color-accent-neutral: #6b7280;
+  --color-text-primary: #e2e8f0;
+  --color-text-secondary: #64748b;
 
-  /* Typography */
+  /* Cyber Accents */
+  --color-accent-clean: #00f0ff;
+  /* Cyan - Scanning/Neutral */
+  --color-accent-warning: #ffb000;
+  /* Amber - Suspicion */
+  --color-accent-danger: #ff003c;
+  /* Crimson - Confirmed Fraud */
+  --color-accent-success: #00ff41;
+  /* Matrix Green - Verified/Safe */
+
   --font-sans: 'Inter', sans-serif;
-  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  --font-mono: 'JetBrains Mono', monospace;
 }
 
-/* Global Baseline */
 @layer base {
   body {
     background-color: var(--color-background-primary);
     color: var(--color-text-primary);
     font-family: var(--font-sans);
-    -webkit-font-smoothing: antialiased;
+    /* Cyber Grid Background overlay */
+    background-image: linear-gradient(var(--color-border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--color-border) 1px, transparent 1px);
+    background-size: 40px 40px;
+    background-position: center center;
+    background-attachment: fixed;
     margin: 0;
     min-height: 100vh;
   }
 }
 
-/* Custom Scrollbar for tables and sidepanels */
+/* Glowing Scrollbar */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background-color: var(--color-background-primary);
+  background: var(--color-background-primary);
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: var(--color-border);
-  border-radius: 9999px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background-color: var(--color-text-secondary);
+  background: var(--color-accent-clean);
+  border-radius: 3px;
+  box-shadow: 0 0 10px var(--color-accent-clean);
 }
