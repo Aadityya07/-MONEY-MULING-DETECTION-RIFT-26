@@ -199,6 +199,8 @@ Dependencies: [frontend/package.json](frontend/package.json)
 - Set `VITE_API_BASE_URL` in frontend deployment to your backend origin (example: `https://your-backend.onrender.com`).
 - Backend CORS allowlist is configurable via `FRONTEND_ORIGIN` (single) or `FRONTEND_ORIGINS` (comma-separated).
 - On Render backend, set `FRONTEND_ORIGIN` to your frontend URL (example: `https://your-frontend.onrender.com`).
+- For large CSVs, run backend with a higher worker timeout (Render start command example): `gunicorn "app:create_app()" --bind 0.0.0.0:$PORT --timeout 180 --workers 1 --threads 4`.
+- Optional performance env vars for cycle search on large datasets: `MAX_CYCLES=1000`, `MAX_CYCLE_EXPANSIONS=250000`, `MAX_CYCLE_PATH_LEN=5`.
 - Ensure backend is running before uploading a CSV.
 - For production, consider:
   - stricter error handling and logging

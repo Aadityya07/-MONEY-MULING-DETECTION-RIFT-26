@@ -1,5 +1,24 @@
 import networkx as nx
 
+
+def _compute_centrality(G):
+    node_count = G.number_of_nodes()
+
+    if node_count == 0:
+        return {}
+
+    simple_graph = nx.DiGraph(G)
+
+    if node_count > 4000:
+        return {}
+
+    if node_count > 1200:
+        sample_k = min(200, node_count)
+        return nx.betweenness_centrality(simple_graph, k=sample_k, seed=42)
+
+    return nx.betweenness_centrality(simple_graph)
+
+
 def calculate_scores(G, cycles, smurfing_data, shell_chains):
     # Unpack the updated smurfing data
     suspicious_nodes, payroll_like, merchant_like, benford_violators = smurfing_data
@@ -10,7 +29,7 @@ def calculate_scores(G, cycles, smurfing_data, shell_chains):
     rings = []
     ring_counter = 1
 
-    centrality = nx.betweenness_centrality(G)
+    centrality = _compute_centrality(G)
 
     # ---------------------------
     # CYCLE RINGS
