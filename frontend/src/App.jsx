@@ -1,10 +1,16 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import UploadSection from './components/UploadSection';
+
+// Component Imports
+import LandingPage from './components/LandingPage';
 import ProgressTracker from './components/ProgressTracker';
 import SummaryStats from './components/SummaryStats';
 import FraudRingTable from './components/FraudRingTable';
 import SuspiciousTable from './components/SuspiciousTable';
+import GraphVisualization from './components/GraphVisualization';
+// import DownloadButton from './components/DownloadButton';
+
+// Hook Imports
 import { useAnalysis } from './hooks/useAnalysis';
 
 export default function App() {
@@ -23,20 +29,20 @@ export default function App() {
   const shouldShowResults = appState === 'results' && animationComplete;
 
   return (
-    <div className="min-h-screen p-6 relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden">
       <AnimatePresence mode="wait">
 
-        {/* STATE: UPLOAD */}
+        {/* STATE: UPLOAD (Now wrapped in the Tactical Landing Page) */}
         {appState === 'upload' && (
           <motion.div
             key="upload"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0, y: -50 }}
             transition={{ duration: 0.4 }}
-            className="flex items-center justify-center min-h-[80vh]"
+            className="w-full px-6"
           >
-            <UploadSection
+            <LandingPage
               onFileValid={(f) => setFile(f)}
               onAnalyze={startAnalysis}
             />
@@ -51,7 +57,7 @@ export default function App() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ duration: 0.4 }}
-            className="flex items-center justify-center min-h-[80vh]"
+            className="flex items-center justify-center min-h-[80vh] px-6"
           >
             <ProgressTracker
               onCancel={handleReset}
@@ -67,20 +73,26 @@ export default function App() {
             key="results"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="w-full max-w-7xl mx-auto mt-6"
+            className="w-full max-w-7xl mx-auto mt-6 px-6 pb-20"
           >
             {/* Header controls */}
-            <div className="flex justify-between items-center mb-6 border-b border-border pb-4">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 border-b border-border pb-4 mt-10">
               <h1 className="text-2xl font-bold text-text-primary font-mono uppercase tracking-widest flex items-center gap-3">
-                <span className="w-3 h-3 bg-accent-clean rounded-full animate-pulse"></span>
+                <span className="w-3 h-3 bg-accent-clean rounded-full animate-pulse shadow-[0_0_10px_#00f0ff]"></span>
                 Forensics Report Generated
               </h1>
-              <button
-                onClick={handleReset}
-                className="px-4 py-2 border border-border text-text-secondary hover:text-accent-clean hover:border-accent-clean transition-colors font-mono text-sm rounded"
-              >
-                [ UPLOAD NEW DATASET ]
-              </button>
+
+              <div className="flex flex-wrap items-center gap-4">
+                {/* Download Actions */}
+                <DownloadButton suspiciousAccounts={analysisResult.suspicious_accounts} />
+
+                <button
+                  onClick={handleReset}
+                  className="px-4 py-2 border border-text-secondary text-text-secondary hover:text-white hover:border-white transition-colors font-mono text-sm rounded"
+                >
+                  [ UPLOAD NEW DATASET ]
+                </button>
+              </div>
             </div>
 
             {/* Stat Cards */}
@@ -94,12 +106,10 @@ export default function App() {
               </div>
             )}
 
-            {/* Graph Visualization Placeholder 
-              (We will build this critical piece next!)
-            */}
-            <div className="w-full h-[500px] border border-border bg-background-secondary rounded-xl mb-8 flex items-center justify-center shadow-[inset_0_0_50px_rgba(0,0,0,0.5)]">
-              <span className="text-text-secondary font-mono animate-pulse">[ CYTOSCAPE GRAPH RENDER TARGET ]</span>
-            </div>
+            {/* Cytoscape Graph Rendering */}
+            {analysisResult.graph_data && (
+              <GraphVisualization graphData={analysisResult.graph_data} />
+            )}
 
             {/* Tables */}
             <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
@@ -120,7 +130,7 @@ export default function App() {
             key="error"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center justify-center min-h-[80vh] text-center"
+            className="flex flex-col items-center justify-center min-h-[80vh] text-center px-6"
           >
             <div className="bg-background-card border border-accent-danger p-8 rounded-xl max-w-lg shadow-[0_0_30px_rgba(255,0,60,0.2)]">
               <h2 className="text-2xl font-bold text-accent-danger font-mono mb-4 uppercase">
