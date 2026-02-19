@@ -276,6 +276,7 @@ export default function LandingPage({ onScanComplete, scanHistory, onRestore }) 
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef(null);
+  const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 
   const handleFileUpload = async (file) => {
     if (!file) return;
@@ -290,7 +291,7 @@ export default function LandingPage({ onScanComplete, scanHistory, onRestore }) 
     formData.append('file', file);
 
     try {
-      const response = await axios.post('http://127.0.0.1:5000/analyze', formData, {
+      const response = await axios.post(`${apiBaseUrl}/analyze`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       setIsLoading(false);

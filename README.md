@@ -195,9 +195,9 @@ Dependencies: [frontend/package.json](frontend/package.json)
 
 ## Notes
 
-- Frontend currently calls backend at `http://127.0.0.1:5000/analyze` in [frontend/src/components/LandingPage.jsx](frontend/src/components/LandingPage.jsx).
+- Frontend now uses `VITE_API_BASE_URL` for API requests (falls back to relative `/analyze` if unset).
+- Set `VITE_API_BASE_URL` in frontend deployment to your backend origin (example: `https://your-backend.onrender.com`).
 - Ensure backend is running before uploading a CSV.
 - For production, consider:
-  - environment-based API URL configuration
   - stricter error handling and logging
   - containerized deployment
