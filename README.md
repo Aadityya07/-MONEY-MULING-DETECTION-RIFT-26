@@ -1,207 +1,147 @@
-# RIFT Forensics — Money Muling Detection Platform
+RIFT Forensics Engine
+Track: Graph Theory / Financial Crime Detection Track
+Challenge: Money Muling Detection Challenge
 
-RIFT Forensics is a full-stack fraud analysis system that detects suspicious money-flow behavior from transaction CSV files.  
-It combines graph analytics and pattern detection to identify:
+Live Links
+Live Web Application: https://money-muling-detection-rift-26-1-avbo.onrender.com/
 
-- **Fraud rings (cycles)**
-- **Smurfing / mule aggregation patterns**
-- **Layered shell chains**
-- **Benford’s Law anomalies**
+Demo Video: https://www.linkedin.com/posts/yash-tongale-551b01297_rifthackathon-moneymulingdetection-financialcrime-activity-7430423429234966528-XNxn?utm_source=share&utm_medium=member_desktop&rcm=ACoAAEfjfc0BRDYo2xGY4dFPoNq38UJjpxrAqVs
 
-The backend exposes an analysis API, and the frontend provides an interactive forensic dashboard with graph visualization and ring summaries.
+1. Project Overview
+The RIFT Forensics Engine is a high-performance, graph-theoretic web application designed to ingest raw financial transaction logs and expose sophisticated money muling networks. It bypasses traditional relational database limitations by reconstructing the latent topologies of fraud, specifically targeting circular routing, temporal smurfing, and layered shell networks, while actively mitigating false positives from legitimate high-volume accounts.
 
-## Project Structure
+2. Tech Stack
+Frontend: React.js, Tailwind CSS
 
-- Backend API: [backend/app.py](backend/app.py)
-- Analysis route: [backend/routes/analyze.py](backend/routes/analyze.py)
-- Detection services:
-  - [backend/services/cycle_detector.py](backend/services/cycle_detector.py)
-  - [backend/services/smurfing_detector.py](backend/services/smurfing_detector.py)
-  - [backend/services/shell_detector.py](backend/services/shell_detector.py)
-  - [backend/services/suspicion_engine.py](backend/services/suspicion_engine.py)
-  - [backend/services/json_formatter.py](backend/services/json_formatter.py)
-- Frontend app entry:
-  - [frontend/src/main.jsx](frontend/src/main.jsx)
-  - [frontend/src/App.jsx](frontend/src/App.jsx)
+Graph Visualization: Cytoscape.js (Bifurcated rendering engine for 10k+ scalability)
 
-## Core Features
+Backend: Python, Flask, Flask-CORS
 
-- Upload transaction CSV datasets from the frontend
-- Strict CSV validation and timestamp parsing
-- Directed graph construction from transaction flow
-- Multi-pattern fraud detection:
-  - Cycle ring detection
-  - Smurfing behavior detection
-  - Shell-chain identification
-  - Benford deviation scoring
-- Suspicion scoring with centrality-based weighting
-- JSON export of analysis results
-- Interactive Cytoscape-based network graph and ring summary dashboard
+Graph Processing Core: NetworkX, Pandas, NumPy
 
-## Input CSV Format
+Deployment: Render (Backend), Vercel/Netlify (Frontend)
 
-Expected columns (exact order):
+3. System Architecture
+The system utilizes a stateless, event-driven architecture to ensure sub-second processing and rendering.
 
-1. `transaction_id`
-2. `sender_id`
-3. `receiver_id`
-4. `amount`
-5. `timestamp`
 
-Validation logic is implemented in [backend/utils/validators.py](backend/utils/validators.py).
+Complete Data Flow Diagram
+Plaintext
+USER                    FRONTEND                 BACKEND
+ |                          |                       |
+ |-- Uploads CSV ---------->|                       |
+ |                          |-- Validate format --->|
+ |                          |                       |
+ |                          |-- POST /analyze ----->|
+ |                          |   (multipart/form)    |
+ |                          |                       |-- Parse CSV (Pandas)
+ |<-- Loading Screen -------|                       |-- Build Graph (NetworkX)
+ |                          |                       |-- Module A: Detect Cycles
+ |                          |                       |-- Module B: Detect Smurfing
+ |                          |                       |-- Module C: Detect Shells
+ |                          |                       |-- Apply False Positive Filters
+ |                          |                       |-- Calculate Suspicion Scores
+ |                          |                       |-- Assign Ring IDs
+ |                          |                       |-- Serialize JSON Output
+ |                          |                       |
+ |                          |<-- JSON response -----|
+ |                          |                       |
+ |-- View Dashboard <-------|-- Render Cytoscape    |
+ |                          |-- Render Table        |
+ |                          |-- Render Metrics      |
+ |                          |                       |
+ |-- Hover Node ----------->|                       |
+ |<-- Display Tooltip ------|                       |
+ |                          |                       |
+ |-- Click Export JSON ---->|                       |
+ |<-- Download .json file --|                       |
 
-## API
 
-### `POST /analyze`
+4. Algorithm Approach & Complexity Analysis
+Module A: Depth-Limited Cycle Detection (Circular Routing)
+Traditional algorithms for finding all cycles (like Johnson's) possess a time complexity of O((V+E)(C+1)), which is computationally unviable for dense financial graphs. We implemented a customized Depth-Limited DFS strictly constrained to a maximum recursion depth of 5 (matching the 3-5 hop problem constraint).
 
-Accepts `multipart/form-data` with key:
+Optimization: Canonical pruning ensures a cycle is only recorded if the starting node has the minimum lexicographical ID in the path, preventing redundant permutations.
 
-- `file`: CSV file
+Complexity: O(V * d^k) where d is the average out-degree and k is the maximum depth (5). On sparse financial graphs, this executes in sub-second timeframes.
 
-Implemented in [`analyze_transactions`](backend/routes/analyze.py).
+Module B: Temporal Motif Mining (Smurfing)
+Smurfing is identified through temporal flow imbalances. The algorithm filters for high-degree hubs (In/Out Degree >= 10). It then applies a 72-hour sliding window across the node's edge timestamps.
 
-Returns JSON containing:
+Optimization: Evaluates the Flow Imbalance Ratio within the temporal window. If inbound volume matches outbound dispersion within 72 hours, it is flagged as an aggregator.
 
-- `suspicious_accounts`
-- `fraud_rings`
-- `summary`
-- `graph_data`
+Complexity: O(E log(d_max)) per candidate node, dominated by the temporal sorting of edges.
 
----
+Module C: Layered Shell Scanner (Constrained Pathfinding)
+Detects paths of 3+ hops where intermediate nodes act as passive conduits.
 
-## Installation & Run Guide
+Optimization: Pre-calculates global degree centrality to identify nodes with a total degree <= 3, isolating the search space exclusively to paths passing through these restricted nodes.
 
-> Run backend and frontend in separate terminals.
+5. Suspicion Score Methodology & Innovation
+The engine generates a 0-100 Suspicion Score utilizing a weighted, centrality-boosted formula combined with aggressive false-positive reduction heuristics.
 
-### 1) Windows (PowerShell)
+Base Scoring Weights:
 
-#### Prerequisites
+Cycle Participation: +60 points
 
-- Python 3.10+
-- Node.js 18+
-- npm
+Temporal Smurfing Pattern: +60 points
 
-#### Backend setup
+Shell Intermediary Role: +50 points
 
-```powershell
-cd backend
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-python app.py
-```
+Innovation & Heuristics (Score Modifiers):
 
-Backend runs at `http://127.0.0.1:5000`.
+Betweenness Centrality Boost: Adds up to +10 points based on the node's mathematical importance as a bridge between separate illicit clusters.
 
-#### Frontend setup
+Benford's Law Forensic Module (USP): Analyzes the leading digits of outbound smurfing amounts against Benford's logarithmic distribution. High Mean Absolute Error indicates fabricated transaction amounts, triggering an additional +30 point penalty.
 
-```powershell
-cd frontend
-npm install
-npm run dev
-```
+Payroll Trap Filter (False Positive Control): Evaluates outbound flow variance for fan-out hubs. Regular disbursements trigger a -50 point deduction, classifying the node as a legitimate payroll account.
 
-Frontend runs at `http://127.0.0.1:5173`.
+Merchant Trap Filter (False Positive Control): Evaluates flow symmetry for fan-in hubs. High fan-in without subsequent rapid fan-out triggers a -50 point deduction, classifying the node as a legitimate merchant.
 
----
+6. Installation & Setup
+Backend Setup
+Navigate to the backend directory: cd backend
 
-### 2) macOS (zsh/bash)
+Create a virtual environment: python -m venv venv
 
-#### Prerequisites
+Activate the environment:
 
-- Python 3.10+
-- Node.js 18+
-- npm
+Windows: venv\Scripts\activate
 
-#### Backend setup
+Mac/Linux: source venv/bin/activate
 
-```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python app.py
-```
+Install dependencies: pip install -r requirements.txt
 
-#### Frontend setup
+Start the server: python app.py (Runs on port 5000)
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+Frontend Setup
+Navigate to the frontend directory: cd frontend
 
----
+Install dependencies: npm install
 
-### 3) Linux (bash)
+Start the development server: npm run dev
 
-#### Prerequisites
+Access the UI at http://localhost:5173/
 
-- Python 3.10+
-- Node.js 18+
-- npm
+7. Usage Instructions
+Access the live URL or local instance.
 
-#### Backend setup
+Drag and drop a valid transaction_log.csv file into the upload zone. Ensure headers match the exact specifications: transaction_id, sender_id, receiver_id, amount, timestamp.
 
-```bash
-cd backend
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python app.py
-```
+The engine will process the topology and redirect to the Dashboard.
 
-#### Frontend setup
+Interact with the graph: Zoom, pan, and click on nodes (highlighted in red) to view granular forensic details and associated Ring IDs.
 
-```bash
-cd frontend
-npm install
-npm run dev
-```
+Click "Export JSON" in the top right corner to download the compliance-ready schema required for the hackathon evaluation.
 
----
+8. Known Limitations
+Hardware Memory Limits on Massive Graphs: The Cytoscape frontend implements a bifurcated rendering engine (shifting to a grid layout with disabled physics for datasets > 2,000 nodes). However, attempting to render graphs exceeding 50,000 raw nodes in a browser may cause client-side memory exhaustion. Pagination or server-side graph tiling would be required for extreme scale.
 
-## Usage
+Temporal Parsing Assumptions: The backend utilizes Pandas mixed-format parsing. Highly irregular or corrupted timestamp strings may default to Pandas NaT and bypass the 72-hour sliding window check.
 
-1. Open the frontend URL shown by Vite.
-2. Upload a valid transaction `.csv` file.
-3. Wait for backend analysis to complete.
-4. Review:
-   - Metrics cards
-   - Graph topology view
-   - Fraud ring table
-5. Export JSON report from dashboard.
+9. Team Members
+[Your Name] - Backend Algorithms & Graph Architecture
 
-## Tech Stack
+[Team Member 2 Name] - Frontend Integration & Visualization
 
-### Backend
-
-- Flask + Flask-CORS
-- pandas
-- networkx
-- numpy
-
-Dependencies: [backend/requirements.txt](backend/requirements.txt)
-
-### Frontend
-
-- React + Vite
-- Tailwind CSS
-- axios
-- react-cytoscapejs + cytoscape
-- lucide-react
-
-Dependencies: [frontend/package.json](frontend/package.json)
-
-## Notes
-
-- Frontend now uses `VITE_API_BASE_URL` for API requests (falls back to relative `/analyze` if unset).
-- Set `VITE_API_BASE_URL` in frontend deployment to your backend origin (example: `https://your-backend.onrender.com`).
-- Backend CORS allowlist is configurable via `FRONTEND_ORIGIN` (single) or `FRONTEND_ORIGINS` (comma-separated).
-- On Render backend, set `FRONTEND_ORIGIN` to your frontend URL (example: `https://your-frontend.onrender.com`).
-- For large CSVs, run backend with a higher worker timeout (Render start command example): `gunicorn "app:create_app()" --bind 0.0.0.0:$PORT --timeout 180 --workers 1 --threads 4`.
-- Optional performance env vars for cycle search on large datasets: `MAX_CYCLES=1000`, `MAX_CYCLE_EXPANSIONS=250000`, `MAX_CYCLE_PATH_LEN=5`.
-- Ensure backend is running before uploading a CSV.
-- For production, consider:
-  - stricter error handling and logging
-  - containerized deployment
+[Team Member 3 Name] - Data Preprocessing & Validation
